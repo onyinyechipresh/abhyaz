@@ -7,34 +7,31 @@
 #EXPOSE 8080
 #ENTRYPOINT ["java", "-jar", "abhyaz.jar"]
 
-# Use Maven to build your application
+# Use the official PostgreSQL image as the base image
+FROM postgres:latest AS postgres
+
+# Create a custom PostgreSQL user and database
+ENV POSTGRES_DB=mydb
+ENV POSTGRES_USER=myuser
+ENV POSTGRES_PASSWORD=mypassword
+
+# Optionally, you can initialize the database with data by copying a SQL dump file
+# COPY init.sql /docker-entrypoint-initdb.d/
+
+# Build your Java application using Maven
 FROM maven:3.8.5-openjdk-17 AS build
 COPY . .
 RUN mvn clean package -DskipTests
 
-# Use the official PostgreSQL Docker image
-FROM postgres:13
+# Use the OpenJDK image as the final base image
+FROM openjdk:17.0.1-jdk-slim
 
-# Create a Docker network for your containers to communicate
-# This step is optional but recommended
-# Create a Docker network for your containers to communicate
-# This step is optional but recommended
-RUN mkdir -p /docker-entrypoint-initdb.d
-COPY init.sql /docker-entrypoint-initdb.d/
+# Copy the built JAR file from the build stage
+COPY --from=build /target/abhyaz-0.0.1-SNAPSHOT.jar abhyaz.jar
 
-# Expose the PostgreSQL port (default is 5432)
-EXPOSE 5432
-
-# Specify environment variables for PostgreSQL (optional)
-ENV POSTGRES_DB=mydatabase
-ENV POSTGRES_USER=myuser
-ENV POSTGRES_PASSWORD=mypassword
-
-# Copy your built JAR file from the build stage
-COPY --from=build /target/abhyaz-0.0.1-SNAPSHOT.jar /app/abhyaz.jar
-
-# Expose the port your application listens on (8080 in your case)
+# Expose the port your Java application will run on
 EXPOSE 8080
 
-# Set the entry point to run your application
-ENTRYPOINT ["java", "-jar", "/app/abhyaz.jar"]
+# Define the command to run your Java application
+ENTRYPOINT ["java", "-jar", "abhyaz.jar"]
+
