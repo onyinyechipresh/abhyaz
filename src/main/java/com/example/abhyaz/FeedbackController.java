@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/feedback")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://feedback-form-esrf.onrender.com")
 public class FeedbackController {
     private final FeedbackService feedbackService;
 
